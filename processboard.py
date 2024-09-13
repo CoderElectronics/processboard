@@ -2,6 +2,7 @@ from flask import Flask, send_from_directory, redirect, current_app
 from flask_socketio import SocketIO, send, emit
 import json, uuid, threading, requests, eventlet, os
 from enum import Enum
+from typing import Union
 
 # Status types
 class Status(Enum):
@@ -11,80 +12,50 @@ class Status(Enum):
     WORKING = 0.5
     INFORMATION = 2
 
+class Complications(Enum):
+    BASIC = "BasicLoading"
+    BATCH = "BatchLoading"
+    TIMER = "TimeLoading"
+
 # Page item classes
-class BasicLoading:
+
+class Loader:
+    def __init__(self, name, value: Union[str, int, float] = 0, end: Union[str, int, float] = 0, complication = Complications.BASIC, description = "", tag = "", status = Status.WAITING):
+        self.state = {}
+
+        self.state['type'] = complication.value
+        self.state['id'] = str(uuid.uuid4())
+
+        # val params
+        self.state['value'] = value
+        self.state['end'] = end
+
+        # text params
+        self.state['status'] = status.value
+        self.state['name'] = name
+        self.state['description'] = description
+        self.state['tag'] = tag
+
+    def getId(self):
+        return self.state['id']
+
+    def __obj__(self):
+        return self.state
+
+    def __str__(self) -> str:
+        return json.dumps(self.state)
+
+class BasicLoading(Loader):
     def __init__(self, name, description = "", tag = "", status = Status.WAITING):
-        self.state = {}
+        super(BasicLoading, self).__init__(name, complication = Complications.BASIC, description = description, tag = tag, status = status)
 
-        self.state['type'] = 'BasicLoading'
-        self.state['id'] = str(uuid.uuid4())
+class BatchLoading(Loader):
+    def __init__(self, name, value: Union[int, float], end: Union[int, float], description = "", tag = "", status = Status.WAITING):
+        super(BatchLoading, self).__init__(name, value, end, complication = Complications.BATCH, description = description, tag = tag, status = status)
 
-        # params
-        self.state['status'] = status.value
-        self.state['name'] = name
-        self.state['description'] = description
-        self.state['tag'] = tag
-
-
-    def getId(self):
-        return self.state['id']
-
-    def __obj__(self):
-        return self.state
-
-    def __str__(self) -> str:
-        return json.dumps(self.state)
-
-class BatchLoading:
-    def __init__(self, name, value = 0, end = 0, description = "", tag = "", status = Status.WAITING):
-        self.state = {}
-
-        self.state['type'] = 'BatchLoading'
-        self.state['id'] = str(uuid.uuid4())
-
-        # params
-        self.state['value'] = value
-        self.state['end'] = end
-
-        self.state['status'] = status.value
-        self.state['name'] = name
-        self.state['description'] = description
-        self.state['tag'] = tag
-
-
-    def getId(self):
-        return self.state['id']
-
-    def __obj__(self):
-        return self.state
-
-    def __str__(self) -> str:
-        return json.dumps(self.state)
-
-class TimeLoading:
+class TimeLoading(Loader):
     def __init__(self, name, value: str, end: str, description = "", tag = "", status = Status.WAITING):
-        self.state = {}
-
-        self.state['type'] = 'TimeLoading'
-        self.state['id'] = str(uuid.uuid4())
-
-        # params
-        self.state['value'] = value
-        self.state['end'] = end
-
-        self.state['status'] = status.value
-        self.state['name'] = name
-        self.state['description'] = description
-        self.state['tag'] = tag
-
-    def getId(self):
-        return self.state['id']
-
-    def __obj__(self):
-        return self.state
-
-    def __str__(self) -> str:
-        return json.dumps(self.state)
+        super(TimeLoading, self).__init__(name, value, end, complication = Complications.TIMER, description = description, tag = tag, status = status)
 
 # Background server class
 class ProcessBoard:
@@ -167,6 +138,24 @@ class ProcessBoard:
 
         def setStatus(self, id, status=Status.COMPLETE):
             return self.setParam(id, 'status', status.value)
+
+        def next(self, status=Status.COMPLETE, final=Status.WORKING, search=Status.WORKING):
+            if len(list(filter(lambda x: x['status'] != Status.WAITING.value, self.elems))) == 0:
+                self.elems[0]['status'] = final.value
+
+                self.onChg(self)
+                return True
+
+            for idx, item in enumerate(self.elems):
+                if item['status'] == search.value:
+                    self.elems[idx]['status'] = status.value
+
+                    if idx+1 < len(self.elems):
+                        self.elems[idx+1]['status'] = final.value
+
+                    self.onChg(self)
+                    return True
+            return False
 
         def __str__(self):
             return json.dumps(self.elems)
