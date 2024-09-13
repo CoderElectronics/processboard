@@ -5,16 +5,16 @@ pb = ProcessBoard()
 
 items = [
     # new generic loader class
-    #Loader("Basic", description="This is a basic progress item", status=Status.WORKING),
-    #Loader("Batch", value = 0, end = 100, description="This is a batch progress item", complication=Complications.BATCH),
-    #Loader("Time", value = "00:00:00", end = "00:00:10", description="This is a time progress item", complication=Complications.TIMER),
-    #Loader("Information", description="", tag="New"),
+    Loader("Basic", description="This is a basic progress item", status=Status.WORKING),
+    Loader("Batch", value = 0, end = 100, description="This is a batch progress item", complication=Complications.BATCH),
+    Loader("Time", value = "00:00:00", end = "00:00:10", description="This is a time progress item", complication=Complications.TIMER),
+    Loader("Information", description="", tag="New"),
 
     # traditional specific loader classes
-    BasicLoading("Basic", description="This is a basic progress item", status=Status.WORKING),
-    BatchLoading("Batch", value = 0, end = 100, description="This is a batch progress item"),
-    TimeLoading("Time", "00:00:00", "00:00:10", description="This is a time progress item", tag="New"),
-    BasicLoading("Information", description=""),
+    #BasicLoading("Basic", description="This is a basic progress item", status=Status.WORKING),
+    #BatchLoading("Batch", value = 0, end = 100, description="This is a batch progress item"),
+    #TimeLoading("Time", "00:00:00", "00:00:10", description="This is a time progress item", tag="New"),
+    #BasicLoading("Information", description=""),
 ]
 
 while True:
