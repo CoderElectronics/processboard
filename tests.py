@@ -57,6 +57,10 @@ while True:
 
         pb.items.setParam(items[3].getId(), 'description', "This is some important information with <b>bold text</b> and <i>italic text</i>.")
 
+        time.sleep(5)
+
+        pb.sendNotification("Hello world", "This is an alert notification", timeout=5000)
+
     if x == 'p':
         print("Populating server page...")
         pb.items.add(items)

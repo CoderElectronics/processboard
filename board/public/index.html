@@ -145,12 +145,41 @@
             <!-- end of useful stuff -->
         </div>
 
+        <div x-data="{
+                show: 0,
+                timeout: 5000,
+                title: 'Title here',
+                description: 'Here is a long description. Here is a long description. Here is a long description. Here is a long description. Here is a long description. Here is a long description. ',
+            }"
+            x-init="$watch('show', (value, oldValue) => { if (!oldValue && value) setTimeout(() => {show = !show}, timeout)})"
+            x-show="show"
+            id="glob-alert"
+            class="absolute bottom-5 right-5 ml-5 p-4 border border-gray-300 rounded-lg bg-gray-50 dark:border-gray-600 dark:bg-gray-800"
+            role="alert"
+            x-transition
+        >
+          <div class="flex items-center">
+            <svg class="flex-shrink-0 w-4 h-4 me-2 dark:text-gray-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+            </svg>
+            <span class="sr-only" x-text="title"></span>
+            <h3 class="text-lg font-medium text-gray-800 dark:text-gray-300" x-text="title">This is a dark alert</h3>
+          </div>
+          <div class="mt-2 mb-4 text-sm text-gray-800 dark:text-gray-300" x-html="description"></div>
+          <div class="flex">
+            <button @click="show=!show" type="button" class="text-gray-800 bg-transparent border border-gray-700 hover:bg-gray-800 hover:text-white focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-3 py-1.5 text-center dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-gray-800 dark:text-gray-300 dark:hover:text-white" aria-label="Close">
+              Dismiss
+            </button>
+          </div>
+        </div>
+
         <!-- global scripts -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
 
         <script>
             /* main variable stack */
             var mainStack = document.body._x_dataStack[0];
+            var notifStack = document.getElementById("glob-alert")._x_dataStack[0];
 
             var socket = io();
 
@@ -164,6 +193,12 @@
                 console.log("received updated items:", data);
                 mainStack.view_data = data;
                 mainStack.connected = true;
+            });
+
+            socket.on('ev_notification', function(data) {
+                console.log("received notification item:", data);
+                mainStack.connected = true;
+                Object.assign(notifStack, data);
             });
         </script>
 

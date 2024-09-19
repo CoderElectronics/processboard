@@ -8,4 +8,4 @@ if [ "$1" == "-c" ]; then
     exit
 fi
 
-python3 main.py
+python3 tests.py

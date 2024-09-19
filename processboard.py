@@ -1,4 +1,4 @@
-from flask import Flask, send_from_directory, redirect, current_app
+from flask import Flask, send_from_directory, redirect, current_app, request
 from flask_socketio import SocketIO, send, emit
 import json, uuid, threading, requests, eventlet, os
 from enum import Enum
@@ -18,7 +18,6 @@ class Complications(Enum):
     TIMER = "TimeLoading"
 
 # Page item classes
-
 class Loader:
     def __init__(self, name, value: Union[str, int, float] = 0, end: Union[str, int, float] = 0, complication = Complications.BASIC, description = "", tag = "", status = Status.WAITING):
         self.state = {}
@@ -88,6 +87,9 @@ class ProcessBoard:
         self._proc = threading.Thread(target=self._server, args=())
         self._proc.daemon = True
         self._proc.start()
+
+    def sendNotification(self, title, description, timeout = 5000):
+        self._relay_caller('ev_notification', {'show': 1, 'title': title, 'description': description, 'timeout': timeout})
 
     # web UI routes
     class BoardItems:
@@ -168,7 +170,7 @@ class ProcessBoard:
     def handle_message(data):
         current_app._self_ref.socketio.emit('ev_update_items', current_app._self_ref.items.__obj__())
 
-    # integrated HTTP routes
+    # integrated server stop methods
     @app.route('/stop')
     def _stop_handler():
         current_app._self_ref.socketio.stop()
@@ -188,6 +190,23 @@ class ProcessBoard:
         except:
             pass
 
+    # circuitous messaging relay
+    @app.route('/relay_msg')
+    def _relay_handler():
+        ev = str(request.args.get('ev'))
+        payload = str(request.args.get('content'))
+
+        current_app._self_ref.socketio.emit(ev, json.loads(payload))
+        return ""
+
+    def _relay_caller(self, ev, payload):
+        try:
+            requests.get("http://{}:{}/relay_msg".format(self.host, self.port),
+                params={'ev': ev, 'content': json.dumps(payload)})
+        except:
+            pass
+
+    # static file serving
     @app.route('/pb/<path:path>')
     def _static_handler(path):
         return send_from_directory('board/public/', path)
