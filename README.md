@@ -1,4 +1,4 @@
-![Banner](https://github.com/ExpressLRS/ExpressLRS-Hardware/blob/master/img/banner.png?raw=true)
+![Banner](https://github.com/CoderElectronics/processboard/blob/main/docs/screenshot.png?raw=true)
 
 <center>
 
